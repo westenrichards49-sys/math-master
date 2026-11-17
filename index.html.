@@ -1,0 +1,215 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Math Learning Center</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#101827;color:white;font-family:Arial,sans-serif}
+header{background:#2563eb;text-align:center;padding:18px}
+header h1{margin:0}
+.container{display:flex;min-height:85vh}
+.sidebar{width:125px;flex-shrink:0;background:#172338;padding:8px}
+.sidebar button{width:100%;padding:13px 4px;margin:5px 0;background:#263b59;color:white;border:0;border-radius:9px;font-size:14px}
+.sidebar button.active{background:#2563eb}
+main{flex:1;min-width:0;padding:12px 6px;text-align:center}
+.card{background:#1e293b;max-width:550px;margin:12px auto;padding:18px 8px;border-radius:15px}
+.question{display:inline-block;text-align:right;font-family:monospace;font-size:34px;line-height:1.4;background:#0f172a;padding:15px 25px;border-radius:10px;margin:15px}
+.line{border-top:3px solid white}
+input,select{padding:12px;border-radius:8px;border:0;font-size:18px;margin:8px;max-width:95%}
+input{width:190px;text-align:center;background:#334155;color:white}
+.action{background:#2563eb;color:white;border:0;border-radius:9px;padding:13px 16px;margin:5px;font-size:16px}
+.green{background:#16a34a}
+.orange{background:#ea580c}
+#feedback{font-size:19px;min-height:30px;margin:12px}
+.score{color:#93c5fd;font-size:18px}
+.fraction{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 5px}
+.fraction span:first-child{border-bottom:2px solid white;padding:3px}
+.fraction span:last-child{padding:3px}
+@media(max-width:380px){.sidebar{width:105px}.question{font-size:28px;padding:12px}}
+</style>
+</head>
+<body>
+
+<header>
+<h1>📚 Math Learning Center</h1>
+<p>Practice, Learn, Get Better!</p>
+</header>
+
+<div class="container">
+<nav class="sidebar">
+<button class="active" onclick="setMode('multiplication',this)">✖ Multiply</button>
+<button onclick="setMode('addition',this)">➕ Addition</button>
+<button onclick="setMode('subtraction',this)">➖ Subtract</button>
+<button onclick="setMode('division',this)">➗ Divide</button>
+<button onclick="setMode('fractions',this)">½ Fractions</button>
+</nav>
+
+<main>
+<div class="card">
+<h2 id="modeTitle">Multiplication Test</h2>
+<p>Choose difficulty:</p>
+<select id="difficulty" onchange="newQuestion()">
+<option value="easy">Easy</option>
+<option value="medium" selected>Medium</option>
+<option value="hard">Hard</option>
+</select>
+
+<p>Solve this problem:</p>
+<div class="question" id="problem"></div>
+
+<div>
+<input id="answer" type="number" step="any" placeholder="Your answer">
+</div>
+
+<button class="action green" onclick="checkAnswer()">Check Answer</button>
+<button class="action orange" onclick="newQuestion()">New Question</button>
+
+<div id="feedback"></div>
+<div class="score">Score: <span id="score">0</span></div>
+<p>Questions answered: <span id="total">0</span></p>
+</div>
+</main>
+</div>
+
+<script>
+let mode="multiplication";
+let correctAnswer=0;
+let score=0;
+let total=0;
+let answered=false;
+
+function randomNumber(min,max){
+return Math.floor(Math.random()*(max-min+1))+min;
+}
+
+function setMode(newMode,button){
+mode=newMode;
+document.querySelectorAll(".sidebar button").forEach(b=>b.classList.remove("active"));
+button.classList.add("active");
+document.getElementById("modeTitle").textContent=
+newMode.charAt(0).toUpperCase()+newMode.slice(1)+" Test";
+newQuestion();
+}
+
+function stack(a,b,sign){
+return `<div>${a.toLocaleString()}</div>
+<div>${sign} ${b.toLocaleString()}</div>
+<div class="line"></div>
+<div>?</div>`;
+}
+
+function newQuestion(){
+answered=false;
+document.getElementById("feedback").textContent="";
+document.getElementById("answer").value="";
+
+let difficulty=document.getElementById("difficulty").value;
+let min=difficulty==="easy"?1:difficulty==="medium"?10:100;
+let max=difficulty==="easy"?99:difficulty==="medium"?999:99999;
+
+let a,b,sign;
+
+if(mode==="multiplication"){
+a=randomNumber(min,max);
+b=randomNumber(2,difficulty==="easy"?12:difficulty==="medium"?99:999);
+correctAnswer=a*b;
+sign="×";
+}
+else if(mode==="addition"){
+a=randomNumber(min,max);
+b=randomNumber(min,max);
+correctAnswer=a+b;
+sign="+";
+}
+else if(mode==="subtraction"){
+a=randomNumber(min,max);
+b=randomNumber(min,max);
+if(b>a)[a,b]=[b,a];
+correctAnswer=a-b;
+sign="−";
+}
+else if(mode==="division"){
+b=randomNumber(2,difficulty==="easy"?12:difficulty==="medium"?99:999);
+correctAnswer=randomNumber(min,max);
+a=b*correctAnswer;
+sign="÷";
+document.getElementById("problem").innerHTML=
+`<div>${a.toLocaleString()} ÷ ${b.toLocaleString()}</div>
+<div class="line"></div><div>?</div>`;
+return;
+}
+else if(mode==="fractions"){
+let d1=randomNumber(2,12);
+let n1=randomNumber(1,d1-1);
+let d2=randomNumber(2,12);
+let n2=randomNumber(1,d2-1);
+let operation=randomNumber(0,1)===0?"+":"-";
+
+if(operation==="-"){
+if(n1/d1<n2/d2){
+[n1,n2]=[n2,n1];
+[d1,d2]=[d2,d1];
+}
+}
+
+let numerator=operation==="+"?n1*d2+n2*d1:n1*d2-n2*d1;
+let denominator=d1*d2;
+let gcd=(x,y)=>y===0?x:gcd(y,x%y);
+let divisor=gcd(Math.abs(numerator),denominator);
+correctAnswer=numerator/divisor+"/"+denominator/divisor;
+
+document.getElementById("problem").innerHTML=
+`<div>
+<span class="fraction"><span>${n1}</span><span>${d1}</span></span>
+${operation}
+<span class="fraction"><span>${n2}</span><span>${d2}</span></span>
+</div><div class="line"></div><div>?</div>`;
+return;
+}
+
+document.getElementById("problem").innerHTML=stack(a,b,sign);
+}
+
+function checkAnswer(){
+if(answered)return;
+
+let userAnswer=document.getElementById("answer").value.trim();
+
+if(userAnswer===""){
+document.getElementById("feedback").textContent="Enter an answer first!";
+return;
+}
+
+answered=true;
+total++;
+
+let correct=mode==="fractions"
+?userAnswer.replace(/\s/g,"")===correctAnswer
+:userAnswer!==""&&Number(userAnswer)===correctAnswer;
+
+if(correct){
+score++;
+document.getElementById("feedback").textContent="🎉 Correct! Great job!";
+document.getElementById("feedback").style.color="#4ade80";
+}
+else{
+document.getElementById("feedback").textContent="❌ Not quite! The answer is "+correctAnswer;
+document.getElementById("feedback").style.color="#f87171";
+}
+
+document.getElementById("score").textContent=score;
+document.getElementById("total").textContent=total;
+}
+
+document.getElementById("answer").addEventListener("keydown",function(e){
+if(e.key==="Enter")checkAnswer();
+});
+
+newQuestion();
+</script>
+
+</body>
+</html>
